@@ -192,9 +192,111 @@ done
 
 ### Exercise 4.4: Cost guard implementation
 
-Cost guard cộng chi phí input/output token sau mỗi lần gọi LLM. Mỗi user có giới hạn 1 USD/ngày, toàn dịch vụ 10 USD/ngày; dùng đến 80% thì ghi cảnh báo. Trước mỗi lần gọi, guard kiểm tra giới hạn và chặn request nếu đã hết budget.
+Cost guard dùng Redis để theo dõi chi tiêu mỗi user theo tháng. Mỗi tháng có một key riêng với giới hạn **10 USD**. Trước khi gọi LLM, hàm kiểm tra chi phí dự kiến: nếu vượt giới hạn thì trả `False`, nếu không thì cộng chi phí vào Redis. Key tự hết hạn sau 32 ngày.
 
 ## Part 5: Scaling & Reliability
 
-### Exercise 5.1-5.5: Implementation notes
-[Your explanations and test results]
+### Exercise 5.1–5.2: Health checks và graceful shutdown
+
+Trong `05-scaling-reliability/develop/app.py`, `GET /health` là liveness check để báo process còn hoạt động. `GET /ready` là readiness check: trả `200` khi ứng dụng sẵn sàng và `503` khi chưa sẵn sàng hoặc đang shutdown.
+
+Middleware đếm số request đang xử lý. Khi nhận `SIGTERM` hoặc `SIGINT`, Uvicorn bắt đầu shutdown có kiểm soát; lifespan đặt ứng dụng về trạng thái chưa sẵn sàng và chờ các request đang chạy hoàn tất, tối đa 30 giây.
+
+**Kết quả kiểm tra:**  
+- `GET /health`: 
+```bash
+curl http://localhost:8000/health
+
+{"status":"ok","uptime_seconds":17.4,"version":"1.0.0","environment":"development","timestamp":"2026-11-26T09:05:12.755439+00:00","checks":{"memory":{"status":"ok","used_percent":71.7}}}%
+```
+
+- `GET /ready`: 
+```bash
+{"ready":true,"in_flight_requests":1}% 
+```
+
+- Graceful shutdown: 
+```bash
+INFO:     Started server process [36865]
+INFO:     Waiting for application startup.
+2026-11-26 15:49:36,505 INFO Agent starting up...
+2026-11-26 15:49:36,505 INFO Loading model and checking dependencies...
+2026-11-26 15:49:36,710 INFO ✅ Agent is ready!
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Shutting down
+INFO:     127.0.0.1:53383 - "POST /ask?question=hello HTTP/1.1" 200 OK
+INFO:     Waiting for connections to close. (CTRL+C to force quit)
+INFO:     127.0.0.1:53384 - "POST /ask?question=hello HTTP/1.1" 200 OK
+INFO:     Waiting for application shutdown.
+2026-11-26 15:49:56,004 INFO 🔄 Graceful shutdown initiated...
+2026-11-26 15:49:56,004 INFO ✅ Shutdown complete
+INFO:     Application shutdown complete.
+INFO:     Finished server process [36865]
+2026-11-26 15:49:56,004 INFO Received signal 15 — uvicorn will handle graceful shutdown
+
+[1]  + done       python app.py
+```
+
+### Exercise 5.3–5.5: Stateless, Redis và load balancing
+
+Ứng dụng production lưu session/history trong Redis thay vì RAM riêng của từng agent. Nginx phân phối request tới các agent; Redis giúp bất kỳ agent nào cũng có thể đọc tiếp lịch sử của cùng session.
+
+**Kết quả chạy `python test_stateless.py`:**
+- Tổng số request: 5
+- Số instance được sử dụng: 3 (`instance-dc0820`, `instance-2f4876`, `instance-c27281`)
+- Lịch sử hội thoại: đủ 10 message (5 câu hỏi và 5 câu trả lời)
+- Kết quả: ✅ All requests served despite different instances; ✅ Session history preserved across all instances via Redis.
+
+Kết quả này cho thấy các request trong cùng session đã đi qua nhiều instance nhưng history vẫn được giữ nguyên nhờ Redis. Nếu lưu state trong RAM, mỗi instance chỉ thấy dữ liệu của chính nó nên các request được chuyển sang instance khác có thể không tìm thấy history.
+
+**Khác biệt liveness và readiness:** liveness cho biết process còn sống để platform quyết định có cần restart; readiness cho biết instance đã sẵn sàng nhận traffic hay chưa.
+
+```bash
+python test_stateless.py
+============================================================
+Stateless Scaling Demo
+============================================================
+
+Session ID: d39403ae-0c87-4b12-905b-cfb704e63ea0
+
+Request 1: [instance-dc0820]
+  Q: What is Docker?
+  A: Container là cách đóng gói app để chạy ở mọi nơi. Build once, run anywhere!...
+
+Request 2: [instance-2f4876]
+  Q: Why do we need containers?
+  A: Agent đang hoạt động tốt! (mock response) Hỏi thêm câu hỏi đi nhé....
+
+Request 3: [instance-c27281]
+  Q: What is Kubernetes?
+  A: Đây là câu trả lời từ AI agent (mock). Trong production, đây sẽ là response từ O...
+
+Request 4: [instance-dc0820]
+  Q: How does load balancing work?
+  A: Agent đang hoạt động tốt! (mock response) Hỏi thêm câu hỏi đi nhé....
+
+Request 5: [instance-2f4876]
+  Q: What is Redis used for?
+  A: Agent đang hoạt động tốt! (mock response) Hỏi thêm câu hỏi đi nhé....
+
+------------------------------------------------------------
+Total requests: 5
+Instances used: {'instance-c27281', 'instance-2f4876', 'instance-dc0820'}
+✅ All requests served despite different instances!
+
+--- Conversation History ---
+Total messages: 10
+  [user]: What is Docker?...
+  [assistant]: Container là cách đóng gói app để chạy ở mọi nơi. Build once...
+  [user]: Why do we need containers?...
+  [assistant]: Agent đang hoạt động tốt! (mock response) Hỏi thêm câu hỏi đ...
+  [user]: What is Kubernetes?...
+  [assistant]: Đây là câu trả lời từ AI agent (mock). Trong production, đây...
+  [user]: How does load balancing work?...
+  [assistant]: Agent đang hoạt động tốt! (mock response) Hỏi thêm câu hỏi đ...
+  [user]: What is Redis used for?...
+  [assistant]: Agent đang hoạt động tốt! (mock response) Hỏi thêm câu hỏi đ...
+
+✅ Session history preserved across all instances via Redis!
+```
