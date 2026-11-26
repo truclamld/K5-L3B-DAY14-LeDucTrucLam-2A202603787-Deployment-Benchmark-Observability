@@ -48,10 +48,44 @@ curl -X POST "http://localhost:8000/ask?question=Hello"
 3. Lý do `COPY requirements.txt` trước: Nếu copy cả folder trước thì chỉ cần thay đổi trong phần code (`app.py`) sẽ khiến cho Docker phải copy và chạy lại cả folder (bao gồm việc cài đặt requirements.txt). Copy requirements.txt vào và cài trước sẽ khiến cho Docker không phải copy và cài lại module khi code thay đổi (trừ khi module thay đổi)
 4. CMD là câu lệnh trong Dockerfile được chỉ định sẽ chạy đầu tiên ngay khi container được khởi động. ENTRYPOINT là file thực thi mặc định được chỉ định trong container khi chạy lệnh `docker run`. (Tham khảo: https://www.docker.com/blog/docker-best-practices-choosing-between-run-cmd-and-entrypoint/) 
 
+### Exercise 2.2:
+
+```bash
+docker run -p 8000:8000 my-agent:develop
+
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     192.168.215.1:56860 - "POST /ask?question=Hello HTTP/1.1" 200 OK
+```
+
+```bash
+curl -X POST "http://localhost:8000/ask?question=Hello"
+
+{"answer":"Agent đang hoạt động tốt! (mock response) Hỏi thêm câu hỏi đi nhé."}%                                          
+```
+
 ### Exercise 2.3: Image size comparison
 - Develop: 1.17 GB (~1198.08 MB)
 - Production: 188 MB
 - Difference: 84.31%
+
+### Exercise 2.4:
+
+Sơ đồ architecture diagram của file `02-docker/production/docker-compose.yml`:
+```
+                HTTP :80
+[Client] ─────────────────▶ [Nginx :80]
+                                  │
+                                  │ chuyển tiếp request
+                                  ▼
+                             [Agent :8000]
+                              /          \
+                             /            \
+                  Redis :6379          Qdrant :6333
+                   [Redis]              [Qdrant]
+```
 
 ## Part 3: Cloud Deployment
 
