@@ -1,7 +1,7 @@
 # Deployment Information
 
 ## Public URL
-https://your-agent.railway.app
+https://03787-agent-production.up.railway.app/
 
 ## Platform
 Railway / Render / Cloud Run
@@ -10,22 +10,22 @@ Railway / Render / Cloud Run
 
 ### Health Check
 ```bash
-curl https://your-agent.railway.app/health
+curl https://03787-agent-production.up.railway.app/health
 # Expected: {"status": "ok"}
 ```
 
 ### API Test (with authentication)
 ```bash
-curl -X POST https://your-agent.railway.app/ask \
-  -H "X-API-Key: YOUR_KEY" \
+curl -X POST https://03787-agent-production.up.railway.app/ask \
+  -H "X-API-Key: fake-not-real-key" \
   -H "Content-Type: application/json" \
   -d '{"user_id": "test", "question": "Hello"}'
 ```
 
 ## Environment Variables Set
-- PORT
-- REDIS_URL
-- AGENT_API_KEY
+- PORT: 8000
+- REDIS_URL: URL nội bộ của Redis trên Railway
+- AGENT_API_KEY: fake-not-real-key (key giả để test mock LLM trên Railway, không phải key thật)
 - LOG_LEVEL
 
 ## Screenshots
