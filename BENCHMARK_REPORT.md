@@ -54,13 +54,13 @@ Không nên đặt SLO chỉ theo average vì nó che khuất tail latency mà m
 
 ## 3. Benchmark chất lượng (develop, `eval/run_eval.py`)
 
-| Chỉ số | Agent v1 | Agent v2 | Agent v2 (sau khi sửa KB) |
-|---|---|---|---|
-| Accuracy | | | |
-| Avg tokens / câu | | | |
-| Tổng cost (USD) | | | |
-| Cost / câu đúng (USD) | | | |
-| Quality gate | PASS / FAIL | PASS / FAIL | PASS / FAIL |
+| Chỉ số                | Agent v1    | Agent v2    | Agent v2 (sau khi sửa KB) |
+|-----------------------|-------------|-------------|---------------------------|
+| Accuracy              | 4.3%        | 91.3%       |                           |
+| Avg tokens / câu      | 57.4        | 109.3       |                           |
+| Tổng cost (USD)       | $0.000409   | $0.000764   |                           |
+| Cost / câu đúng (USD) | $0.00040875 | $0.00003639 |                           |
+| Quality gate          | FAIL        | PASS        | PASS / FAIL               |
 
 **Những câu v2 trả lời sai ban đầu và cách bạn sửa:**
 
