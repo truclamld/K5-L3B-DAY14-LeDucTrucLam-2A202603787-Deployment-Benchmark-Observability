@@ -90,8 +90,11 @@ Sơ đồ architecture diagram của file `02-docker/production/docker-compose.y
 ## Part 3: Cloud Deployment
 
 ### Exercise 3.1: Railway deployment
-- URL: https://your-app.railway.app
-- Screenshot: [Link to screenshot in repo]
+- URL: https://03787-agent-production.up.railway.app
+- Screenshot: 
+  - [Deployment dashboard](screenshots/dashboard.png)
+  - [Service running](screenshots/running.png)
+  - [Test results](screenshots/test.png)
 
 ## Part 4: API Security
 
@@ -299,4 +302,28 @@ Total messages: 10
   [assistant]: Agent đang hoạt động tốt! (mock response) Hỏi thêm câu hỏi đ...
 
 ✅ Session history preserved across all instances via Redis!
+```
+
+## Part 6: Final Project
+
+```bash
+================================================================
+  📋 Checklist Deliverable
+     ✅ Dockerfile (multi-stage, < 500 MB)
+     ✅ docker-compose.yml (agent + redis)
+     ✅ .dockerignore
+     ✅ Health check endpoint (GET /health)
+     ✅ Readiness endpoint (GET /ready)
+     ✅ API Key authentication
+     ✅ Rate limiting
+     ✅ Cost guard
+     ✅ Config từ environment variables
+     ✅ Structured logging
+     ✅ Graceful shutdown
+     ✅ Public URL ready (Railway / Render config)
+----------------------------------------------------------------
+  Result: 12/12 tiêu chí đạt · 42/42 checks passed
+  🎉 PASS 12/12 — PRODUCTION READY! Deploy nào!
+================================================================
+
 ```
