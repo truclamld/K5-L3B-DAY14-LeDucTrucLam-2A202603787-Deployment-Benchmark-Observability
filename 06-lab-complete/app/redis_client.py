@@ -7,9 +7,19 @@ Yêu cầu:
   • redis_healthy() dùng cho GET /ready: Redis không kết nối được → False
 """
 
-r = None  # TODO: tạo client, vd redis.from_url(settings.redis_url, decode_responses=True)
+import redis
+from redis.exceptions import RedisError
+
+from .config import settings
+
+# Tạo client chưa mở kết nối; Redis chỉ được truy cập khi gọi một lệnh.
+r = redis.from_url(settings.redis_url, decode_responses=True)
 
 
 def redis_healthy() -> bool:
-    # TODO: ping Redis; lỗi kết nối → False
-    return False
+    """Trả False nếu Redis chưa chạy hoặc không thể kết nối."""
+    try:
+        r.ping()
+        return True
+    except (RedisError, OSError):
+        return False
