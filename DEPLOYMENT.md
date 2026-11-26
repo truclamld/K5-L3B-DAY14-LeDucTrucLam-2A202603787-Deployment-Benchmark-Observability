@@ -17,7 +17,7 @@ curl https://03787-agent-production.up.railway.app/health
 ### API Test (with authentication)
 ```bash
 curl -X POST https://03787-agent-production.up.railway.app/ask \
-  -H "X-API-Key: fake-not-real-key" \
+  -H "X-API-Key: YOUR-API-KEY" \
   -H "Content-Type: application/json" \
   -d '{"user_id": "test", "question": "Hello"}'
 ```
@@ -25,7 +25,7 @@ curl -X POST https://03787-agent-production.up.railway.app/ask \
 ## Environment Variables Set
 - PORT: 8000
 - REDIS_URL: URL nội bộ của Redis trên Railway
-- AGENT_API_KEY: fake-not-real-key (key giả để test mock LLM trên Railway, không phải key thật)
+- AGENT_API_KEY
 - LOG_LEVEL
 
 ## Screenshots
