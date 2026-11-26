@@ -327,3 +327,7 @@ Total messages: 10
 ================================================================
 
 ```
+
+## AI Log
+
+Có sử dụng Codex để hỗ trợ việc soạn code tạo agent platform trong `06-lab-complete/app/`, có đối chiếu lại với các file source trong các folder 01-05 để đảm bảo code chạy đúng và pass check_production_ready, đồng thời giúp hiểu kỹ hơn về cách hoạt động của Agent platform.
